@@ -1,0 +1,32 @@
+import express from 'express';
+import {
+  issueCertificate,
+  getAllCertificates,
+  getCertificateById,
+  getCertificateByCertId,
+  getStudentCertificates,
+  updateCertificateStatus,
+  deleteCertificate,
+  downloadPDF,
+  getRanking,
+} from '../controllers/certificateController.js';
+import { protect, admin } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
+
+// Public routes
+router.get('/verify/:certId', getCertificateByCertId);
+router.get('/ranking', getRanking);
+
+// Protected routes
+router.get('/', protect, admin, getAllCertificates);
+router.get('/my-certificates', protect, getStudentCertificates);
+router.get('/:id', protect, getCertificateById);
+router.get('/:id/download', protect, downloadPDF);
+
+// Admin routes
+router.post('/', protect, admin, issueCertificate);
+router.patch('/:id/status', protect, admin, updateCertificateStatus);
+router.delete('/:id', protect, admin, deleteCertificate);
+
+export default router;
