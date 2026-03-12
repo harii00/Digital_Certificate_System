@@ -60,12 +60,12 @@ const IssueCertificate = () => {
           <span className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-800 group-hover:text-slate-900">Abort Protocol</span>
         </motion.button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+        <div className="flex justify-center">
           {/* Protocol Card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.98, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="lg:col-span-8"
+            className="w-full max-w-2xl"
           >
             <div className="surface-glass p-1 shadow-2xl relative group">
               {/* Elite Form Background */}
@@ -131,7 +131,7 @@ const IssueCertificate = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="grid grid-cols-1 gap-10">
                       <div className="space-y-3 group">
                         <label className="text-[12px] font-black uppercase tracking-widest text-slate-800 ml-4 group-focus-within:text-primary-500 transition-colors">Authorization Date</label>
                         <div className="relative">
@@ -144,18 +144,6 @@ const IssueCertificate = () => {
                             required
                           />
                         </div>
-                      </div>
-
-                      <div className="space-y-3 group">
-                        <label className="text-[12px] font-black uppercase tracking-widest text-slate-800 ml-4 group-focus-within:text-primary-500 transition-colors">Initial Registry State</label>
-                        <select
-                          className="input-saas appearance-none cursor-pointer"
-                          value={formData.status}
-                          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        >
-                          <option value="Valid">Valid (Active Record)</option>
-                          <option value="Pending">Pending (Audit Trail)</option>
-                        </select>
                       </div>
                     </div>
                   </div>
@@ -178,56 +166,6 @@ const IssueCertificate = () => {
                     </button>
                   </div>
                 </form>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Authority Sidebar */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-4 space-y-10"
-          >
-            <div className="surface-card p-10 bg-slate-50 border-slate-100">
-              <div className="flex items-center space-x-3 mb-8">
-                <div className="p-2.5 bg-white border border-slate-100 rounded-xl text-slate-400 shadow-sm">
-                  <Cpu className="w-4 h-4" />
-                </div>
-                <h3 className="text-[12px] font-black uppercase tracking-widest text-slate-900">Registry Protocol</h3>
-              </div>
-              <div className="space-y-8">
-                <div className="flex items-start space-x-4">
-                  <div className="p-2.5 bg-emerald-50 text-emerald-500 rounded-xl border border-emerald-100">
-                    <Lock className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black text-slate-900 uppercase tracking-tight">SHA-256 Hashing</p>
-                    <p className="text-[12px] text-slate-700 font-bold leading-relaxed italic">Records are immutable once deployed to the decentralized hub.</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-4">
-                  <div className="p-2.5 bg-primary-50 text-primary-500 rounded-xl border border-primary-100">
-                    <Target className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Identity Match</p>
-                    <p className="text-[12px] text-slate-700 font-bold leading-relaxed italic">Automatically synchronizes with the recipient's personal vault endpoint.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="surface-card p-10 bg-slate-900 text-white relative group overflow-hidden shadow-2xl">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary blur-[80px] opacity-20 -z-10 group-hover:opacity-40 transition-opacity"></div>
-              <div className="flex items-center space-x-3 mb-8 relative z-10">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-[12px] font-black uppercase tracking-widest text-white/60">Audit Manifest</h3>
-              </div>
-              <p className="text-sm font-bold leading-relaxed mb-8 relative z-10 tracking-tight">You are currently issuing as a <span className="text-primary-400">Verified Institution Authority</span>. Every deployment is logged for governance.</p>
-              <div className="pt-8 border-t border-white/5 flex items-center justify-between text-[12px] font-black uppercase tracking-widest text-white/50">
-                <span>Governance Compliance</span>
-                <span className="text-emerald-500">Passed</span>
               </div>
             </div>
           </motion.div>
