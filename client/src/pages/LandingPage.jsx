@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -18,6 +19,7 @@ import CertificateCard from '../components/CertificateCard';
 
 const LandingPage = () => {
     const navigate = useNavigate();
+    const [hoveredCard, setHoveredCard] = useState(null);
 
     const features = [
         {
@@ -45,8 +47,23 @@ const LandingPage = () => {
 
     return (
         <div className="relative min-h-screen">
+
+            {/* ─── DigiCert Brand Title (top-center) ─── */}
+            <div className="w-full flex justify-center pt-8 pb-2">
+                <span
+                    className="select-none text-[4.5rem] md:text-[6rem] font-black text-slate-900 leading-none"
+                    style={{ 
+                        fontFamily: '"Black Ops One", system-ui, sans-serif',
+                        letterSpacing: '0.02em',
+                        textTransform: 'uppercase'
+                    }}
+                >
+                    DIGICERT
+                </span>
+            </div>
+
             {/* Hero Section */}
-            <section className="relative pt-24 pb-16 px-6">
+            <section className="relative pt-4 pb-16 px-6">
                 <div className="max-w-[1400px] mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                         {/* Content Prop */}
@@ -89,10 +106,10 @@ const LandingPage = () => {
                                 className="flex flex-col sm:flex-row items-center gap-4"
                             >
                                 <button
-                                    onClick={() => navigate('/certificates')}
+                                    onClick={() => navigate('/login')}
                                     className="w-full sm:w-auto btn-saas-primary group"
                                 >
-                                    <span>Explore Registry</span>
+                                    <span>Sign In</span>
                                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
                                 </button>
                                 <button
@@ -157,15 +174,10 @@ const LandingPage = () => {
                                 <motion.div
                                     animate={{ y: [0, 10, 0] }}
                                     transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                                    className="absolute -bottom-8 -left-12 surface-glass px-6 py-4 shadow-xl z-20"
+                                    className="absolute -bottom-4 -left-6 surface-glass px-6 py-4 shadow-xl z-20"
                                 >
                                     <div className="flex items-center space-x-4">
-                                        <div className="flex -space-x-3">
-                                            {[1, 2, 3].map(i => (
-                                                <div key={i} className={`w-9 h-9 rounded-full border-[3px] border-white bg-slate-${i * 100 + 100} shadow-sm`}></div>
-                                            ))}
-                                        </div>
-                                        <p className="text-[12px] font-bold text-slate-800 tracking-tight">+142 Recruiters Viewing</p>
+                                        <p className="text-[12px] font-bold text-slate-800 tracking-tight">+143 views</p>
                                     </div>
                                 </motion.div>
                             </motion.div>
@@ -176,22 +188,8 @@ const LandingPage = () => {
             </section>
 
 
-            {/* Platform Benefits */}
             <section className="py-16 px-6 relative overflow-hidden">
                 <div className="max-w-[1240px] mx-auto">
-                    <div className="text-center mb-20 max-w-2xl mx-auto">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            className="inline-flex items-center space-x-2 px-3 py-1 bg-slate-50 border border-slate-100 rounded-full mb-6"
-                        >
-                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Robust Infrastructure</span>
-                        </motion.div>
-                        <h2 className="text-[3.2rem] font-extrabold tracking-[-0.04em] mb-8 leading-[1.1]">Built for absolute certainty.</h2>
-                        <p className="text-2xl text-slate-900 font-black max-w-lg mx-auto leading-relaxed">Infrastructure designed to meet the most demanding academic and professional standards worldwide.</p>
-                    </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {features.map((f, i) => (
                             <motion.div
@@ -200,40 +198,51 @@ const LandingPage = () => {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: i * 0.1 }}
-                                className="surface-card p-10 bg-white/50 hover:bg-white border-slate-100 hover:border-indigo-100 group transition-all duration-500"
+                                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 24px 64px rgba(99,102,241,0.13)' }}
+                                onMouseEnter={() => setHoveredCard(i)}
+                                onMouseLeave={() => setHoveredCard(null)}
+                                className={`surface-card p-10 bg-white/50 hover:bg-white border-slate-100 hover:border-indigo-100 transition-all duration-400 cursor-default ${
+                                    hoveredCard !== null && hoveredCard !== i
+                                        ? 'opacity-50 blur-[1.5px] scale-[0.98]'
+                                        : ''
+                                }`}
                             >
-                                <div className="p-5 bg-indigo-50 text-indigo-600 rounded-[1.5rem] w-fit mb-10 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 shadow-sm">
-                                    {f.icon}
+                                <div className="flex items-center space-x-5 mb-6">
+                                    <div className="p-4 bg-indigo-50 text-indigo-600 rounded-[1.2rem] flex-shrink-0 shadow-sm transition-all duration-300">
+                                        {f.icon}
+                                    </div>
+                                    <h3 className={`text-2xl font-black tracking-tight uppercase transition-colors duration-300 ${
+                                        hoveredCard === i ? 'text-indigo-600' : 'text-slate-900'
+                                    }`}>{f.title}</h3>
                                 </div>
-                                <h3 className="text-3xl font-black mb-4 tracking-tight group-hover:text-indigo-600 transition-colors uppercase">{f.title}</h3>
-                                <p className="text-slate-800 font-bold leading-relaxed text-xl">{f.desc}</p>
+                                <p className="text-slate-800 font-bold leading-relaxed text-lg pl-[4.5rem]">{f.desc}</p>
                             </motion.div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* How It Works - High Tech Visual */}
-            <section className="py-32 px-6 mx-6 bg-slate-900 text-white relative overflow-hidden rounded-[4rem]">
-                <div className="absolute top-0 right-0 w-[80%] h-full bg-indigo-500/10 blur-[180px] -z-10 translate-x-1/3"></div>
+            {/* How It Works – compact */}
+            <section className="py-16 px-6 mx-6 bg-slate-900 text-white relative overflow-hidden rounded-[3rem]">
+                <div className="absolute top-0 right-0 w-[60%] h-full bg-indigo-500/10 blur-[160px] -z-10 translate-x-1/3"></div>
 
-                <div className="max-w-[1240px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+                <div className="max-w-[960px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                     <div>
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
                         >
-                            <h2 className="text-[3.5rem] font-extrabold tracking-[-0.04em] mb-16 leading-[1.1]">How the registry <br /> secures your integrity.</h2>
+                            <h2 className="text-[2.4rem] font-extrabold tracking-[-0.04em] mb-10 leading-[1.1]">How the registry <br /> secures your integrity.</h2>
                         </motion.div>
 
-                        <div className="space-y-16 relative">
-                            <div className="absolute top-8 bottom-6 left-[31px] w-[2px] bg-gradient-to-b from-indigo-500/50 via-indigo-500/20 to-transparent"></div>
+                        <div className="space-y-10 relative">
+                            <div className="absolute top-6 bottom-4 left-[23px] w-[2px] bg-gradient-to-b from-indigo-500/50 via-indigo-500/20 to-transparent"></div>
 
                             {[
-                                { t: 'Establish Identity', d: 'Institutions create verifiable accounts on our secure node network.' },
+                                { t: 'Establish Identity', d: 'Institutions create verifiable accounts on our network.' },
                                 { t: 'Digital Deployment', d: 'Credentials are verified and issued to recipient profiles.' },
-                                { t: 'Public Ledger', d: 'Every record is instantly added to the immutable global registry.' },
+                                { t: 'Public Ledger', d: 'Every record is instantly added to the global registry.' },
                                 { t: 'Infinite Ownership', d: 'Recipients own their achievements forever, verifiable by anyone, anywhere.' }
                             ].map((s, i) => (
                                 <motion.div
@@ -242,30 +251,34 @@ const LandingPage = () => {
                                     whileInView={{ opacity: 1, x: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: i * 0.1 }}
-                                    className="flex space-x-12 relative group"
+                                    className="flex space-x-8 relative group"
                                 >
-                                    <div className="w-16 h-16 bg-indigo-900/50 border border-indigo-500/30 rounded-full flex items-center justify-center flex-shrink-0 z-10 group-hover:bg-indigo-500 group-hover:scale-110 transition-all duration-500 font-black text-indigo-400 group-hover:text-white text-2xl">
+                                    <div className="w-12 h-12 bg-indigo-900/50 border border-indigo-500/30 rounded-full flex items-center justify-center flex-shrink-0 z-10 group-hover:bg-indigo-500 group-hover:scale-110 transition-all duration-500 font-black text-indigo-400 group-hover:text-white text-lg">
                                         {i + 1}
                                     </div>
-                                    <div className="pt-2">
-                                        <h4 className="text-3xl font-black mb-4 tracking-tight group-hover:text-indigo-400 transition-colors uppercase italic">{s.t}</h4>
-                                        <p className="text-slate-200 font-bold leading-relaxed max-w-lg text-xl">{s.d}</p>
+                                    <div className="pt-1">
+                                        <motion.h4
+                                            whileHover={{ scale: 1.05 }}
+                                            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                                            className="text-xl font-black mb-2 tracking-tight text-white group-hover:text-indigo-400 transition-colors uppercase italic inline-block origin-left"
+                                        >{s.t}</motion.h4>
+                                        <p className="text-slate-300 font-semibold leading-relaxed max-w-md text-base">{s.d}</p>
                                     </div>
                                 </motion.div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Tech Abstract Visual */}
-                    <div className="relative group flex justify-center lg:justify-end">
-                        <div className="w-[500px] h-[500px] bg-indigo-500/5 rounded-[5rem] border border-indigo-500/10 flex items-center justify-center p-16 animate-pulse">
-                            <div className="w-full aspect-square border-[2px] border-dashed border-indigo-500/20 rounded-full animate-spin-slow flex items-center justify-center p-10 relative">
-                                <div className="absolute inset-0 bg-indigo-500/5 blur-[80px] rounded-full"></div>
-                                <div className="w-32 h-32 bg-indigo-600 rounded-[2.5rem] shadow-2xl shadow-indigo-600/40 flex items-center justify-center z-10">
-                                    <ShieldCheck className="w-16 h-16 text-white" />
+                    {/* Tech Abstract Visual – smaller orb */}
+                    <div className="relative flex justify-center lg:justify-end">
+                        <div className="w-[320px] h-[320px] bg-indigo-500/5 rounded-[4rem] border border-indigo-500/10 flex items-center justify-center p-10 animate-pulse">
+                            <div className="w-full aspect-square border-[2px] border-dashed border-indigo-500/20 rounded-full animate-spin-slow flex items-center justify-center p-8 relative">
+                                <div className="absolute inset-0 bg-indigo-500/5 blur-[60px] rounded-full"></div>
+                                <div className="w-20 h-20 bg-indigo-600 rounded-[2rem] shadow-2xl shadow-indigo-600/40 flex items-center justify-center z-10">
+                                    <ShieldCheck className="w-10 h-10 text-white" />
                                 </div>
-                                <div className="absolute top-0 right-10 w-4 h-4 bg-indigo-400 rounded-full blur-[2px]"></div>
-                                <div className="absolute bottom-20 left-0 w-3 h-3 bg-violet-400 rounded-full blur-[2px]"></div>
+                                <div className="absolute top-0 right-8 w-3 h-3 bg-indigo-400 rounded-full blur-[2px]"></div>
+                                <div className="absolute bottom-14 left-0 w-2.5 h-2.5 bg-violet-400 rounded-full blur-[2px]"></div>
                             </div>
                         </div>
                     </div>

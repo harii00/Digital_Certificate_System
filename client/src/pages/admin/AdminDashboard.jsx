@@ -17,10 +17,13 @@ import {
   Zap,
   Sparkles,
   Users,
-  Trophy
+  Trophy,
+  User,
+  LogOut
 } from 'lucide-react';
 import { Badge } from '../../components/UI';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -32,6 +35,12 @@ const AdminDashboard = () => {
   const [recentCertificates, setRecentCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -62,23 +71,59 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="relative min-h-screen pt-32 pb-24 px-6 overflow-hidden">
+    <div className="relative min-h-screen pt-24 pb-24 px-6 overflow-hidden">
+
+      {/* ─── Custom Fixed Header ─── */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
+        {/* Left: Profile + Certificates */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => navigate('/profile')}
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 text-sm font-bold"
+          >
+            <User className="w-4 h-4" />
+            <span>Profile</span>
+          </button>
+          <button
+            onClick={() => navigate('/certificates')}
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 text-sm font-bold"
+          >
+            <Award className="w-4 h-4" />
+            <span>Certificates</span>
+          </button>
+        </div>
+
+        {/* Center: DigiCert brand */}
+        <span
+          className="absolute left-1/2 -translate-x-1/2 text-[1.6rem] font-black text-slate-900 leading-none select-none"
+          style={{ fontFamily: '"Black Ops One", system-ui, sans-serif', letterSpacing: '0.02em', textTransform: 'uppercase' }}
+        >
+          DigiCert
+        </span>
+
+        {/* Right: Logout */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center space-x-2 px-4 py-2 rounded-xl text-slate-600 hover:text-rose-500 hover:bg-rose-50 transition-all duration-200 text-sm font-bold"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
+        </button>
+      </header>
+
       <div className="max-w-[1400px] mx-auto relative z-10">
         {/* Control Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-12">
           <div className="max-w-xl">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-flex items-center space-x-2 px-3 py-1 bg-slate-900 text-white rounded-full mb-6"
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="text-5xl md:text-6xl font-black tracking-[-0.04em] text-slate-900 mb-3 leading-tight"
             >
-              <ShieldCheck className="w-3 h-3" />
-              <span className="text-[12px] font-black uppercase tracking-[0.2em]">Institutional Console</span>
-            </motion.div>
-            <h1 className="text-6xl md:text-7xl font-black tracking-[-0.05em] text-slate-900 mb-6 leading-tight font-serif italic">
-              Node Management <br />
-              <span className="text-slate-500 font-sans not-italic">Ledger Integrity Optimized.</span>
-            </h1>
+              Welcome back, <span className="text-indigo-600">{user?.name?.split(' ')[0] || 'Admin'}</span>
+            </motion.h1>
+            <p className="text-slate-500 font-semibold text-lg">Manage certificates, students, and rankings from your dashboard.</p>
           </div>
           <div className="flex items-center space-x-4 flex-wrap gap-y-4">
             <button

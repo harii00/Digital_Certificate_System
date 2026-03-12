@@ -1,16 +1,9 @@
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Calendar, Award, CheckCircle2 } from 'lucide-react';
 
 const CertificateCard = ({ certificate, className }) => {
-    const navigate = useNavigate();
-
     return (
-        <motion.div
-            whileHover={{ y: -8, scale: 1.02 }}
-            onClick={() => navigate('/certificates')}
-            className={`group perspective-1000 cursor-pointer ${className}`}
-        >
+        <div className={`group perspective-1000 ${className}`}>
             <div className="surface-glass p-1 border-white/50 relative overflow-hidden transition-all duration-500 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)]">
                 {/* Visual Glow Effect */}
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/5 blur-[60px] rounded-full group-hover:bg-indigo-500/10 transition-colors"></div>
@@ -31,7 +24,6 @@ const CertificateCard = ({ certificate, className }) => {
                     <div className="space-y-2 mb-10">
                         <div className="flex items-center space-x-2">
                             <Badge variant="success">Verified Registry</Badge>
-                            <span className="text-[12px] font-black uppercase tracking-widest text-slate-800">Blockchain Secured</span>
                         </div>
                         <h3 className="text-3xl font-black tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
                             {certificate?.studentName || 'Elite Recipient'}
@@ -47,7 +39,6 @@ const CertificateCard = ({ certificate, className }) => {
                             <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-sm border border-slate-100">
                                 <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                             </div>
-                            <span className="text-[12px] font-black uppercase tracking-widest text-slate-800">Scan to Verify</span>
                         </div>
                     </div>
 
@@ -64,7 +55,7 @@ const CertificateCard = ({ certificate, className }) => {
                     </div>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 };
 

@@ -48,8 +48,8 @@ function App() {
       <div className="noise-overlay"></div>
       <div className="mesh-container"></div>
 
-      {location.pathname !== '/login' && <Navbar />}
-      <div className={location.pathname === '/login' ? '' : 'pt-16'}>
+      {location.pathname !== '/login' && location.pathname !== '/student/dashboard' && location.pathname !== '/' && location.pathname !== '/register' && location.pathname !== '/admin/dashboard' && !location.pathname.startsWith('/certificates') && <Navbar />}
+      <div className={['/login', '/student/dashboard', '/', '/register', '/admin/dashboard'].includes(location.pathname) || location.pathname.startsWith('/certificates') ? '' : 'pt-16'}>
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             <Route path="/" element={<LandingPage />} />
