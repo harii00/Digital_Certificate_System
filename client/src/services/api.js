@@ -105,6 +105,12 @@ export const userAPI = {
     });
     return res.data;
   },
+  updateProfile: async (data) => {
+    const res = await axios.put(`${API_BASE}/users/profile`, data, {
+      headers: getAuthHeaders(),
+    });
+    return res.data;
+  },
 };
 
 export const studentAPI = {

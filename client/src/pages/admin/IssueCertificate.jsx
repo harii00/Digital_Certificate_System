@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import AdminHeader from '../../components/AdminHeader';
 
 const IssueCertificate = () => {
   const [formData, setFormData] = useState({
@@ -45,7 +46,8 @@ const IssueCertificate = () => {
   };
 
   return (
-    <div className="relative min-h-screen pt-32 pb-24 px-6 overflow-hidden">
+    <div className="relative min-h-screen pt-24 pb-24 px-6 overflow-hidden">
+      <AdminHeader />
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Context Navigation */}
         <motion.button

@@ -24,6 +24,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Badge } from '../../components/UI';
+import AdminHeader from '../../components/AdminHeader';
 
 const StudentManagement = () => {
   const [students, setStudents] = useState([]);
@@ -125,7 +126,8 @@ const StudentManagement = () => {
   );
 
   return (
-    <div className="relative min-h-screen pt-32 pb-24 px-6 overflow-hidden">
+    <div className="relative min-h-screen pt-24 pb-24 px-6 overflow-hidden">
+      <AdminHeader />
       <div className="max-w-[1400px] mx-auto relative z-10">
         {/* Back */}
         <motion.button

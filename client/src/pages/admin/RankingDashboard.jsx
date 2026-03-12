@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/UI';
+import AdminHeader from '../../components/AdminHeader';
 
 const RankingDashboard = () => {
   const [ranking, setRanking] = useState([]);
@@ -49,7 +50,8 @@ const RankingDashboard = () => {
   };
 
   return (
-    <div className="relative min-h-screen pt-32 pb-24 px-6 overflow-hidden">
+    <div className="relative min-h-screen pt-24 pb-24 px-6 overflow-hidden">
+      <AdminHeader />
       <div className="max-w-[1200px] mx-auto relative z-10">
         {/* Back */}
         <motion.button

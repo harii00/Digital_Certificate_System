@@ -6,6 +6,7 @@ import {
   createStudent,
   updateStudent,
   deleteStudent,
+  updateProfile,
 } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.use(protect);
 router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
 
 // Admin-only student CRUD routes
 router.get('/students', admin, getAllStudents);
