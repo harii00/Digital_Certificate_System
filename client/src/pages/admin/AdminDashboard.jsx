@@ -3,16 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import {
   Award,
-  CheckCircle,
-  XCircle,
-  TrendingUp,
   Plus,
   Search,
-  Activity,
-  ShieldCheck,
-  ChevronRight,
   Database,
   Cpu,
+  TrendingUp,
+  Activity,
   ArrowUpRight,
   Zap,
   Sparkles,
@@ -27,12 +23,6 @@ import { useAuth } from '../../context/AuthContext';
 import AdminHeader from '../../components/AdminHeader';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({
-    total: 0,
-    valid: 0,
-    revoked: 0,
-    pending: 0,
-  });
   const [recentCertificates, setRecentCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -45,12 +35,6 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const { data } = await axios.get('http://localhost:5000/api/certificates');
-      const total = data.length;
-      const valid = data.filter(c => c.status === 'Valid').length;
-      const revoked = data.filter(c => c.status === 'Revoked').length;
-      const pending = data.filter(c => c.status === 'Pending').length;
-
-      setStats({ total, valid, revoked, pending });
       setRecentCertificates(data.slice(0, 8));
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -59,12 +43,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const statCards = [
-    { label: 'Network Registry', value: stats.total, icon: <Database />, color: 'text-slate-900', bg: 'bg-slate-50' },
-    { label: 'Verified Integrity', value: stats.valid, icon: <CheckCircle />, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-    { label: 'Revoked Protocol', value: stats.revoked, icon: <XCircle />, color: 'text-rose-500', bg: 'bg-rose-50' },
-    { label: 'Audit Required', value: stats.pending, icon: <Activity />, color: 'text-amber-500', bg: 'bg-amber-50' },
-  ];
+
 
   return (
     <div className="relative min-h-screen pt-24 pb-24 px-6 overflow-hidden">
@@ -109,29 +88,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Quick Insights Grid (Elite Stripe Style) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
-          {statCards.map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="surface-card p-1 group cursor-default border-transparent hover:border-slate-100"
-            >
-              <div className="bg-white p-10 rounded-[1.8rem] relative overflow-hidden flex flex-col items-center text-center">
-                {/* Depth Overlay */}
-                <div className={`absolute top-0 right-0 w-32 h-32 ${stat.bg} blur-[60px] opacity-20 -z-10 group-hover:opacity-40 transition-opacity`}></div>
 
-                <div className={`w-16 h-16 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center mb-10 shadow-sm border border-white/50 group-hover:rotate-12 transition-transform`}>
-                  {stat.icon}
-                </div>
-                <p className="text-[14px] font-black uppercase tracking-widest text-slate-800 mb-3">{stat.label}</p>
-                <p className="text-6xl font-black text-slate-900 tracking-tighter leading-none">{stat.value}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
 
         {/* Registry & Activity Hub */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
