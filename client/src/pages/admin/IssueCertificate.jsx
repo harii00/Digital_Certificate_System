@@ -36,7 +36,7 @@ const IssueCertificate = () => {
     setLoading(true);
     try {
       await axios.post('http://localhost:5000/api/certificates', formData);
-      toast.success('Professional record issued and encrypted.');
+      toast.success('Certificate issued successfully.');
       navigate('/admin/dashboard');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Issuance protocol failed');
@@ -80,16 +80,15 @@ const IssueCertificate = () => {
                         <Sparkles className="w-3 h-3" />
                         <span>Issuance Authority</span>
                       </div>
-                      <h1 className="text-3xl font-black tracking-tighter text-slate-900 uppercase">Deploy Credential</h1>
+                      <h1 className="text-3xl font-black tracking-tighter text-slate-900 uppercase">Issue Certificate</h1>
                     </div>
                   </div>
-                  <p className="text-slate-600 font-bold leading-relaxed italic max-w-md">Initialize the secure issuance of a verified academic achievement to the global registry.</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-12">
                   <div className="grid grid-cols-1 gap-10">
                     <div className="space-y-3 group">
-                      <label className="text-[12px] font-black uppercase tracking-widest text-slate-600 ml-4 group-focus-within:text-indigo-600 transition-colors">Recipient Legal Identity</label>
+                      <label className="text-[12px] font-black uppercase tracking-widest text-slate-600 ml-4 group-focus-within:text-indigo-600 transition-colors">Name</label>
                       <div className="relative">
                         <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                         <input
@@ -103,7 +102,7 @@ const IssueCertificate = () => {
                     </div>
 
                     <div className="space-y-3 group">
-                      <label className="text-[12px] font-black uppercase tracking-widest text-slate-600 ml-4 group-focus-within:text-indigo-600 transition-colors">Encrypted Delivery Endpoint</label>
+                      <label className="text-[12px] font-black uppercase tracking-widest text-slate-600 ml-4 group-focus-within:text-indigo-600 transition-colors">Email ID</label>
                       <div className="relative">
                         <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                         <input
@@ -118,7 +117,7 @@ const IssueCertificate = () => {
                     </div>
 
                     <div className="space-y-3 group">
-                      <label className="text-[12px] font-black uppercase tracking-widest text-slate-600 ml-4 group-focus-within:text-indigo-600 transition-colors">Achievement Designation</label>
+                      <label className="text-[12px] font-black uppercase tracking-widest text-slate-600 ml-4 group-focus-within:text-indigo-600 transition-colors">Achievement</label>
                       <div className="relative">
                         <FileText className="absolute left-6 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
                         <input
@@ -133,7 +132,7 @@ const IssueCertificate = () => {
 
                     <div className="grid grid-cols-1 gap-10">
                       <div className="space-y-3 group">
-                        <label className="text-[12px] font-black uppercase tracking-widest text-slate-800 ml-4 group-focus-within:text-primary-500 transition-colors">Authorization Date</label>
+                        <label className="text-[12px] font-black uppercase tracking-widest text-slate-800 ml-4 group-focus-within:text-primary-500 transition-colors">Issue Date</label>
                         <div className="relative">
                           <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
                           <input
@@ -159,7 +158,7 @@ const IssueCertificate = () => {
                         <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       ) : (
                         <>
-                          <span className="text-sm font-bold uppercase tracking-[0.2em]">Authorize & Deploy Record</span>
+                          <span className="text-sm font-bold uppercase tracking-[0.2em]">Issue Certificate</span>
                           <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                         </>
                       )}
