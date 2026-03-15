@@ -119,20 +119,29 @@ const LandingPage = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                                className="flex flex-col sm:flex-row items-center gap-4"
+                                className="flex flex-col items-start gap-4"
                             >
+                                <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+                                    <button
+                                        onClick={() => navigate('/login')}
+                                        className="w-full sm:w-auto btn-saas-primary group"
+                                    >
+                                        <span>Sign In</span>
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
+                                    </button>
+                                    <button
+                                        onClick={() => navigate('/register')}
+                                        className="w-full sm:w-auto btn-saas-secondary"
+                                    >
+                                        <span>Join Platform</span>
+                                    </button>
+                                </div>
                                 <button
-                                    onClick={() => navigate('/login')}
-                                    className="w-full sm:w-auto btn-saas-primary group"
+                                    onClick={() => navigate('/verify-certificate')}
+                                    className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white/60 hover:bg-white hover:border-indigo-200 text-slate-700 hover:text-indigo-700 transition-all duration-300 text-[12px] font-black uppercase tracking-[0.15em] shadow-sm group"
                                 >
-                                    <span>Sign In</span>
-                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
-                                </button>
-                                <button
-                                    onClick={() => navigate('/register')}
-                                    className="w-full sm:w-auto btn-saas-secondary"
-                                >
-                                    <span>Join Platform</span>
+                                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-500 group-hover:text-indigo-600" />
+                                    <span>Verify a Certificate</span>
                                 </button>
                             </motion.div>
 
