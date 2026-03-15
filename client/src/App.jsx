@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Navbar from './layouts/Navbar';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import LandingPage from './pages/LandingPage';
@@ -11,7 +10,10 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import IssueCertificate from './pages/admin/IssueCertificate';
 import StudentManagement from './pages/admin/StudentManagement';
 import RankingDashboard from './pages/admin/RankingDashboard';
+import AdminCourseCompletion from './pages/admin/AdminCourseCompletion';
+import AdminCertificateRequests from './pages/admin/AdminCertificateRequests';
 import StudentDashboard from './pages/student/StudentDashboard';
+import StudentCertificateRequest from './pages/student/StudentCertificateRequest';
 import VerifyCertificate from './pages/VerifyCertificate';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
@@ -48,9 +50,7 @@ function App() {
       <div className="noise-overlay"></div>
       <div className="mesh-container"></div>
 
-      {location.pathname !== '/login' && location.pathname !== '/student/dashboard' && location.pathname !== '/' && location.pathname !== '/register' && location.pathname !== '/admin/dashboard' && !location.pathname.startsWith('/admin/dashboard/issue') && location.pathname !== '/admin/students' && location.pathname !== '/admin/ranking' && location.pathname !== '/profile' && !location.pathname.startsWith('/certificates') && <Navbar />}
-      <div className={['/login', '/student/dashboard', '/', '/register', '/admin/dashboard', '/admin/students', '/admin/ranking', '/profile'].includes(location.pathname) || location.pathname.startsWith('/certificates') || location.pathname.startsWith('/admin/dashboard/issue') ? '' : 'pt-16'}>
-        <AnimatePresence mode="wait">
+      <div>
           <Routes location={location} key={location.pathname}>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
@@ -106,12 +106,37 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/admin/courses"
+              element={
+                <ProtectedRoute role="admin">
+                  <AdminCourseCompletion />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/requests"
+              element={
+                <ProtectedRoute role="admin">
+                  <AdminCertificateRequests />
+                </ProtectedRoute>
+              }
+            />
 
             <Route
               path="/student/dashboard"
               element={
                 <ProtectedRoute role="student">
                   <StudentDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/certificate-request"
+              element={
+                <ProtectedRoute role="student">
+                  <StudentCertificateRequest />
                 </ProtectedRoute>
               }
             />
@@ -128,7 +153,6 @@ function App() {
             <Route path="/404" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
-        </AnimatePresence>
       </div>
     </div>
   );

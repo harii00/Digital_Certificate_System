@@ -8,6 +8,8 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import certificateRoutes from './routes/certificateRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import courseRoutes from './routes/courseRoutes.js';
+import requestRoutes from './routes/requestRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -27,6 +29,8 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/requests', requestRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

@@ -10,13 +10,16 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            fetchProfile();
-        } else {
-            setLoading(false);
-        }
+        const checkAuth = async () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                await fetchProfile();
+            } else {
+                setLoading(false);
+            }
+        };
+        checkAuth();
     }, []);
 
     const fetchProfile = async () => {

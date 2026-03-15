@@ -28,6 +28,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  signature: {
+    type: String,
+    default: '',
+  },
+  roll_number: {
+    type: String,
+    unique: true,
+    sparse: true, // Only for students
+  },
 }, {
   timestamps: true,
 });

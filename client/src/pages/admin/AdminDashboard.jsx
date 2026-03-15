@@ -2,28 +2,27 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import {
-  Award,
+  Trophy,
+  User,
+  LogOut,
   Plus,
   Search,
   Database,
-  Cpu,
+  ArrowUpRight,
   TrendingUp,
   Activity,
-  ArrowUpRight,
-  Zap,
-  Sparkles,
+  Award,
   Users,
-  Trophy,
-  User,
-  LogOut
 } from 'lucide-react';
 import { Badge } from '../../components/UI';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminHeader from '../../components/AdminHeader';
+import { requestAPI } from '../../services/api';
 
 const AdminDashboard = () => {
   const [recentCertificates, setRecentCertificates] = useState([]);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -34,8 +33,15 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const { data } = await axios.get('http://localhost:5000/api/certificates');
-      setRecentCertificates(data.slice(0, 8));
+      const [certRes, reqRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/certificates'),
+        requestAPI.getAll()
+      ]);
+      setRecentCertificates(certRes.data.slice(0, 8));
+      
+      const requests = reqRes.data || reqRes;
+      const pendingCount = requests.filter(r => r.status === 'pending').length;
+      setPendingRequestsCount(pendingCount);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -63,27 +69,49 @@ const AdminDashboard = () => {
             </motion.h1>
             <p className="text-slate-500 font-semibold text-lg">Manage certificates, students, and rankings from your dashboard.</p>
           </div>
-          <div className="flex items-center space-x-4 flex-wrap gap-y-4">
-            <button
-              onClick={() => navigate('/admin/students')}
-              className="btn-saas-secondary px-8 h-fit group"
-            >
-              <Users className="w-4 h-4 mr-2" />
-              <span>Students</span>
-            </button>
-            <button
-              onClick={() => navigate('/admin/ranking')}
-              className="btn-saas-secondary px-8 h-fit group"
-            >
-              <Trophy className="w-4 h-4 mr-2" />
-              <span>Rankings</span>
-            </button>
+          <div className="flex flex-col items-end gap-4">
+            <div className="flex items-center space-x-3 justify-end flex-nowrap">
+              <button
+                onClick={() => navigate('/admin/courses')}
+                className="btn-saas-secondary px-6 h-fit group"
+              >
+                <Database className="w-4 h-4 mr-2" />
+                <span>Course Data</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/requests')}
+                className="btn-saas-secondary px-6 h-fit group relative"
+              >
+                <Award className="w-4 h-4 mr-2" />
+                <span>Requests</span>
+                {pendingRequestsCount > 0 && (
+                  <span className="absolute top-0 right-0 -mt-1.5 -mr-1.5 flex h-3.5 w-3.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500 border-2 border-slate-50"></span>
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => navigate('/admin/students')}
+                className="btn-saas-secondary px-6 h-fit group"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                <span>Students</span>
+              </button>
+              <button
+                onClick={() => navigate('/admin/ranking')}
+                className="btn-saas-secondary px-6 h-fit group"
+              >
+                <Trophy className="w-4 h-4 mr-2" />
+                <span>Rankings</span>
+              </button>
+            </div>
             <button
               onClick={() => navigate('/admin/dashboard/issue')}
               className="btn-saas-primary px-12 h-fit shadow-2xl shadow-primary-500/10 group"
             >
               <Plus className="w-5 h-5 mr-3 group-hover:rotate-90 transition-transform duration-500" />
-              <span>Issue New Credential</span>
+              <span>Manual Issue</span>
             </button>
           </div>
         </div>
@@ -91,9 +119,9 @@ const AdminDashboard = () => {
 
 
         {/* Registry & Activity Hub */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-8">
-            <div className="surface-card bg-white border-slate-100 overflow-hidden">
+        <div className="grid grid-cols-1 gap-12">
+          <div className="w-full">
+            <div className="surface-card bg-white border-slate-100 overflow-hidden shadow-sm">
               <div className="p-10 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                 <div className="flex items-center space-x-4">
                   <div className="p-2.5 bg-white border border-slate-100 rounded-xl shadow-sm text-slate-400">
@@ -137,67 +165,6 @@ const AdminDashboard = () => {
                     </AnimatePresence>
                   </tbody>
                 </table>
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-4 space-y-12">
-            {/* Security Manifest (Elite Glow) */}
-            <div className="surface-card p-12 bg-slate-900 text-white shadow-elite relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500 blur-[100px] opacity-10 -mr-12 -mt-12 group-hover:opacity-20 transition-opacity"></div>
-
-              <div className="flex items-center space-x-3 mb-10 relative z-10">
-                <div className="p-3 bg-white/10 rounded-2xl border border-white/5 shadow-2xl">
-                  <TrendingUp className="w-5 h-5 text-emerald-400" />
-                </div>
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] relative z-10">Global Integrity</h3>
-              </div>
-
-              <p className="text-white/40 font-medium mb-10 leading-relaxed relative z-10 tracking-tight italic">
-                Protocol synchronized across all institutional clusters. Registry health is currently optimal.
-              </p>
-
-              <div className="space-y-6 relative z-10">
-                <div className="flex justify-between text-[12px] font-black uppercase tracking-widest text-white/50">
-                  <span>Audit Synchronization</span>
-                  <span>100% Secure</span>
-                </div>
-                <div className="w-full bg-white/5 h-2.5 rounded-full overflow-hidden border border-white/5">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: '100%' }}
-                    transition={{ duration: 2, ease: "easeOut" }}
-                    className="bg-emerald-500 h-full rounded-full shadow-[0_0_20px_rgba(16,185,129,0.3)]"
-                  ></motion.div>
-                </div>
-              </div>
-            </div>
-
-            {/* Node Events Activity */}
-            <div className="surface-card p-10 bg-white border-slate-100">
-              <h3 className="text-[12px] font-black uppercase tracking-widest text-slate-400 mb-8 px-2 flex items-center">
-                <Cpu className="w-3 h-3 mr-3" />
-                Synchronized Cluster Log
-              </h3>
-              <div className="space-y-6">
-                {[
-                  { msg: 'Master Node: Optimal', time: '1m ago', color: 'bg-emerald-500', icon: <Sparkles className="w-3 h-3" /> },
-                  { msg: 'Bulk Export Success', time: '2h ago', color: 'bg-indigo-500', icon: <Database className="w-3 h-3" /> },
-                  { msg: 'Revocation Audit', time: '5h ago', color: 'bg-amber-500', icon: <Activity className="w-3 h-3" /> }
-                ].map((ev, i) => (
-                  <div key={i} className="flex items-start justify-between p-5 bg-slate-50/50 rounded-2xl hover:bg-white border border-transparent hover:border-slate-100 transition-all group">
-                    <div className="flex items-start space-x-4">
-                      <div className={`mt-1 w-2 h-2 rounded-full ${ev.color} animate-pulse shadow-[0_0_10px_currentColor]`}></div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-black text-slate-900 tracking-tight uppercase">{ev.msg}</p>
-                        <p className="text-[12px] font-bold text-slate-800 uppercase tracking-widest">{ev.time}</p>
-                      </div>
-                    </div>
-                    <div className="text-slate-100 group-hover:text-slate-200 transition-colors">
-                      {ev.icon}
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

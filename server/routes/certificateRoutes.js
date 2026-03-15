@@ -17,12 +17,12 @@ const router = express.Router();
 // Public routes
 router.get('/verify/:certId', getCertificateByCertId);
 router.get('/ranking', getRanking);
+router.get('/:id/download', downloadPDF);
 
 // Protected routes
 router.get('/', protect, admin, getAllCertificates);
 router.get('/my-certificates', protect, getStudentCertificates);
 router.get('/:id', protect, getCertificateById);
-router.get('/:id/download', protect, downloadPDF);
 
 // Admin routes
 router.post('/', protect, admin, issueCertificate);

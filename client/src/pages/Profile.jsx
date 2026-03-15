@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button } from '../components/UI';
-import { User, Mail, Shield, ArrowLeft, Camera, Check, X, Loader2 } from 'lucide-react';
+import { User, Mail, Shield, ArrowLeft, Camera, Check, X, Loader2, Building, PenTool } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { userAPI } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,7 +18,8 @@ const Profile = ({ role }) => {
         name: user?.name || '',
         email: user?.email || '',
         password: '',
-        profilePicture: user?.profilePicture || ''
+        profilePicture: user?.profilePicture || '',
+        signature: user?.signature || ''
     });
 
     useEffect(() => {
@@ -27,7 +28,8 @@ const Profile = ({ role }) => {
                 ...prev,
                 name: user.name,
                 email: user.email,
-                profilePicture: user.profilePicture
+                profilePicture: user.profilePicture,
+                signature: user.signature
             }));
         }
     }, [user]);
@@ -66,7 +68,8 @@ const Profile = ({ role }) => {
             name: user?.name || '',
             email: user?.email || '',
             password: '',
-            profilePicture: user?.profilePicture || ''
+            profilePicture: user?.profilePicture || '',
+            signature: user?.signature || ''
         });
         setIsEditing(false);
     };
@@ -178,6 +181,77 @@ const Profile = ({ role }) => {
                                             )}
                                         </div>
                                     </div>
+
+                                    <div className="flex items-center p-4 border-t border-slate-100/50">
+                                        <div className="p-3 bg-white rounded-xl shadow-sm mr-4 text-slate-400 border border-slate-100">
+                                            <Shield className="w-5 h-5" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Institutional Roll Number</p>
+                                            <p className="text-slate-900 font-mono font-bold text-lg tracking-tight">{user?.roll_number || 'Not Assigned'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center p-4 border-t border-slate-100/50">
+                                        <div className="p-3 bg-white rounded-xl shadow-sm mr-4 text-slate-400 border border-slate-100">
+                                            <Building className="w-5 h-5" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Academic Department</p>
+                                            <p className="text-slate-900 font-bold text-lg tracking-tight">{user?.department || 'Not Assigned'}</p>
+                                        </div>
+                                    </div>
+
+                                    {user?.role === 'admin' && (
+                                        <div className="flex items-center p-4 border-t border-slate-100/50">
+                                            <div className="p-3 bg-white rounded-xl shadow-sm mr-4 text-slate-400 border border-slate-100">
+                                                <PenTool className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">E-Signature</p>
+                                                {isEditing ? (
+                                                    <div className="mt-2 space-y-3">
+                                                        <div className="h-24 bg-white border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden relative group">
+                                                            {formData.signature ? (
+                                                                <img src={formData.signature} alt="Signature" className="h-full object-contain p-2" />
+                                                            ) : (
+                                                                <span className="text-sm font-bold text-slate-400">Upload Signature Image</span>
+                                                            )}
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files[0];
+                                                                    if (file) {
+                                                                        if (file.size > 1024 * 1024) {
+                                                                            toast.error('Signature limits to 1MB');
+                                                                            return;
+                                                                        }
+                                                                        const render = new FileReader();
+                                                                        render.onloadend = () => setFormData({ ...formData, signature: render.result });
+                                                                        render.readAsDataURL(file);
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <div className="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
+                                                                <span className="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">Click to Browse</span>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-xs text-slate-500 font-medium">Please upload a clean signature on a transparent background (PNG).</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="mt-2 h-20 bg-white border border-slate-100 rounded-xl flex items-center justify-center p-2">
+                                                        {user?.signature ? (
+                                                            <img src={user.signature} alt="Signature" className="h-full object-contain" />
+                                                        ) : (
+                                                            <span className="text-xs font-bold text-slate-400">No Signature on File</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <AnimatePresence>
                                         {isEditing && (

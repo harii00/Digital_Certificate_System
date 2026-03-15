@@ -209,86 +209,116 @@ export const deleteCertificate = async (req, res) => {
 // @access  Private
 export const downloadPDF = async (req, res) => {
   try {
-    const certificate = await Certificate.findById(req.params.id);
+    const certificate = await Certificate.findById(req.params.id)
+      .populate('issuedBy'); // Load issuer to get signature
 
     if (!certificate) {
       return res.status(404).json({ message: 'Certificate not found' });
     }
 
     // Role-based filtering: Students can only download their own
-    if (req.user.role === 'student' && certificate.studentId.toString() !== req.user._id.toString()) {
+    if (req.user && req.user.role === 'student' && certificate.studentId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to download this certificate' });
     }
 
     const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 0 });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename=${certificate.certificateId}.pdf`
-    );
+    
+    // Support inline viewing via ?inline=true
+    if (req.query.inline === 'true') {
+      res.setHeader('Content-Disposition', `inline; filename=${certificate.certificateId}.pdf`);
+    } else {
+      res.setHeader('Content-Disposition', `attachment; filename=${certificate.certificateId}.pdf`);
+    }
+    
     doc.pipe(res);
 
-    // Background Color
+    // Background Color (Light/White)
     doc.rect(0, 0, doc.page.width, doc.page.height).fill('#ffffff');
 
-    // Border
+    // Bolder, Stylized Multi-layer Border
     doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40)
-      .lineWidth(2)
-      .stroke('#4f46e5'); // Indigo color
+      .lineWidth(8)
+      .stroke('#0f172a'); // Thick outer border
 
-    doc.rect(30, 30, doc.page.width - 60, doc.page.height - 60)
-      .lineWidth(1)
-      .stroke('#8b5cf6'); // Violet color
+    doc.rect(34, 34, doc.page.width - 68, doc.page.height - 68)
+      .lineWidth(1.5)
+      .stroke('#64748b'); // Thin inner border
 
-    // Content
-    doc.fillColor('#1f2937'); // Gray-900
+    // Load and place the college logo at the top
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const logoPath = path.resolve('public', 'bannari_new_logo.png');
+      if (fs.existsSync(logoPath)) {
+        // Significantly increase banner logo size and center it
+        doc.image(logoPath, (doc.page.width - 550) / 2, 60, { width: 550 });
+      }
+    } catch(err) {
+      console.error('Logo not found or could not be loaded:', err);
+    }
 
-    doc.fontSize(40)
-      .font('Helvetica-Bold')
-      .text('CERTIFICATE', 0, 80, { align: 'center' });
+    doc.fillColor('#475569'); // slate-600
 
-    doc.fontSize(20)
+    // Shift the text body down to account for the larger logo, and tighten line spacing
+    doc.fontSize(18)
       .font('Helvetica')
-      .text('OF COMPLETION', 0, 130, { align: 'center' });
+      .text('This acknowledges that', 0, 260, { width: doc.page.width, align: 'center' });
 
-    doc.moveDown(2);
+    doc.moveDown(0.3);
 
-    doc.fontSize(16)
-      .text('This is to certify that', { align: 'center' });
+    // Ensure name fits on a single line dynamically
+    let nameFontSize = 42;
+    doc.font('Helvetica-Bold');
+    while (doc.widthOfString(certificate.studentName, { size: nameFontSize }) > doc.page.width - 120) {
+      nameFontSize -= 2;
+    }
 
-    doc.moveDown(1);
+    doc.fontSize(nameFontSize)
+      .fillColor('#0f172a') // slate-900
+      .text(certificate.studentName, 0, doc.y, { width: doc.page.width, align: 'center', lineBreak: false });
 
-    doc.fontSize(32)
-      .font('Helvetica-Bold')
-      .fillColor('#4f46e5')
-      .text(certificate.studentName, { align: 'center' });
+    doc.moveDown(0.3);
 
-    doc.moveDown(1);
-
-    doc.fillColor('#1f2937')
-      .fontSize(16)
+    doc.fillColor('#475569') // slate-600
+      .fontSize(18)
       .font('Helvetica')
-      .text('has successfully participated in', { align: 'center' });
+      .text('has successfully completed and is certified in', 0, doc.y, { width: doc.page.width, align: 'center' });
 
-    doc.moveDown(0.5);
+    doc.moveDown(0.3);
 
-    doc.fontSize(24)
+    doc.fontSize(28)
+      .font('Times-BoldItalic') // Different distinct font style
+      .fillColor('#1e40af') // Standout color
+      .text(`${certificate.event}`, 0, doc.y, { width: doc.page.width, align: 'center' });
+
+    // Lock the Y-axis for both the text block and the signature block so they align perfectly horizontally
+    const bottomY = 460;
+
+    // Bottom Left Section (Date and ID)
+    const formattedDate = new Date(certificate.issuedDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+    doc.fontSize(16) // Increased size
       .font('Helvetica-Bold')
-      .text(certificate.event, { align: 'center' });
+      .fillColor('#475569') // slate-600
+      .text(`Issue Date: ${formattedDate}`, 60, bottomY)
+      .text(`Certificate ID: ${certificate.certificateId}`, 60, bottomY + 25);
 
-    doc.moveDown(1.5);
-
-    doc.moveDown(1);
-    doc.fontSize(16)
-      .font('Helvetica-Bold')
-      .fillColor('#4f46e5')
-      .text(`CERTIFICATE ID: ${certificate.certificateId}`, 100, 440);
-
-    // Add QR Code
-    if (certificate.qrCode) {
-      const qrImage = certificate.qrCode.split(',')[1];
-      const qrBuffer = Buffer.from(qrImage, 'base64');
-      doc.image(qrBuffer, doc.page.width - 180, 380, { width: 100 });
+    // Bottom Right Section (Admin E-Signature)
+    if (certificate.issuedBy && certificate.issuedBy.signature) {
+      try {
+        const sigImage = certificate.issuedBy.signature.split(',')[1];
+        if (sigImage) {
+            const sigBuffer = Buffer.from(sigImage, 'base64');
+            // Align to bottomY perfectly. A 120px tall image at bottomY-70 places its visual center exactly with the text.
+            doc.image(sigBuffer, doc.page.width - 320, bottomY - 60, { width: 260, height: 120, fit: [260, 120], align: 'right' });
+        }
+      } catch(err) {
+          console.error('Error rendering signature map:', err);
+          doc.fontSize(16).font('Helvetica-Oblique').fillColor('#0f172a').text('Authorized Signatory', doc.page.width - 250, bottomY + 10);
+      }
+    } else {
+      // Placeholder if no signature
+      doc.fontSize(14).font('Helvetica-Oblique').fillColor('#0f172a').text('Authorized Signatory', doc.page.width - 250, bottomY + 10);
     }
 
     doc.end();

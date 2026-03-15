@@ -22,6 +22,7 @@ import AdminHeader from '../../components/AdminHeader';
 
 const IssueCertificate = () => {
   const [formData, setFormData] = useState({
+    rollNumber: '',
     studentName: '',
     studentEmail: '',
     event: '',
@@ -42,6 +43,30 @@ const IssueCertificate = () => {
       toast.error(error.response?.data?.message || 'Issuance protocol failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRollNumberChange = async (e) => {
+    const roll = e.target.value.toUpperCase();
+    setFormData(prev => ({ ...prev, rollNumber: roll }));
+
+    if (roll.length >= 10) {
+      try {
+        const { data } = await axios.get(`http://localhost:5000/api/users/students/roll/${roll}`);
+        if (data && data.name && data.email) {
+          setFormData(prev => ({
+            ...prev,
+            studentName: data.name,
+            studentEmail: data.email
+          }));
+          toast.success('Student data auto-filled.', { id: 'autofill-success' });
+        }
+      } catch (error) {
+        // Silently ignore 404s while typing, only show if it's a real network error
+        if (error.response?.status !== 404) {
+          console.error('Failed to fetch student by roll number:', error);
+        }
+      }
     }
   };
 
@@ -87,6 +112,19 @@ const IssueCertificate = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-12">
                   <div className="grid grid-cols-1 gap-10">
+                    <div className="space-y-3 group">
+                      <label className="text-[12px] font-black uppercase tracking-widest text-slate-600 ml-4 group-focus-within:text-indigo-600 transition-colors">Roll Number (Optional)</label>
+                      <div className="relative">
+                        <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                        <input
+                          placeholder="e.g. 7376232CB119"
+                          className="input-saas pl-14 uppercase"
+                          value={formData.rollNumber}
+                          onChange={handleRollNumberChange}
+                        />
+                      </div>
+                    </div>
+
                     <div className="space-y-3 group">
                       <label className="text-[12px] font-black uppercase tracking-widest text-slate-600 ml-4 group-focus-within:text-indigo-600 transition-colors">Name</label>
                       <div className="relative">

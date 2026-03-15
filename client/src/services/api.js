@@ -10,76 +10,44 @@ const getAuthHeaders = () => {
   };
 };
 
+const api = axios.create({
+  baseURL: API_BASE,
+});
+
+// Add interceptor for auth headers
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const authAPI = {
   login: async (email, password) => {
-    const res = await axios.post(`${API_BASE}/auth/login`, { email, password });
+    const res = await api.post('/auth/login', { email, password });
     return res.data;
   },
-
   logout: async () => {
-    const res = await axios.post(`${API_BASE}/auth/logout`);
+    const res = await api.post('/auth/logout');
     return res.data;
   },
-
   register: async (userData) => {
-    const res = await axios.post(`${API_BASE}/auth/register`, userData);
+    const res = await api.post('/auth/register', userData);
     return res.data;
   },
 };
 
 export const certificateAPI = {
-  issue: async (data) => {
-    const res = await axios.post(`${API_BASE}/certificates`, data, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
-
-  getAll: async (params) => {
-    const res = await axios.get(`${API_BASE}/certificates`, { params });
-    return res.data;
-  },
-
-  getById: async (id) => {
-    const res = await axios.get(`${API_BASE}/certificates/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
-
-  getStudentCertificates: async () => {
-    const res = await axios.get(`${API_BASE}/certificates/my-certificates`, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
-
-  verify: async (certId) => {
-    const res = await axios.get(`${API_BASE}/certificates/verify/${certId}`);
-    return res.data;
-  },
-
-  updateStatus: async (id, status) => {
-    const res = await axios.patch(`${API_BASE}/certificates/${id}/status`, { status }, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
-
-  delete: async (id) => {
-    const res = await axios.delete(`${API_BASE}/certificates/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
-
-  downloadUrl: (id) => {
-    return `${API_BASE}/certificates/${id}/download`;
-  },
-
+  issue: (data) => api.post('/certificates', data),
+  getAll: (params) => api.get('/certificates', { params }),
+  getById: (id) => api.get(`/certificates/${id}`),
+  getStudentCertificates: () => api.get('/certificates/my-certificates'),
+  verify: (certId) => api.get(`/certificates/verify/${certId}`),
+  updateStatus: (id, status) => api.patch(`/certificates/${id}/status`, { status }),
+  delete: (id) => api.delete(`/certificates/${id}`),
   download: async (id, certificateId) => {
-    const res = await axios.get(`${API_BASE}/certificates/${id}/download`, {
-      headers: getAuthHeaders(),
+    const res = await api.get(`/certificates/${id}/download`, {
       responseType: 'blob',
     });
     const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -91,61 +59,35 @@ export const certificateAPI = {
     link.remove();
     window.URL.revokeObjectURL(url);
   },
-
-  getRanking: async () => {
-    const res = await axios.get(`${API_BASE}/certificates/ranking`);
-    return res.data;
-  },
+  getRanking: () => api.get('/certificates/ranking'),
 };
 
 export const userAPI = {
-  getProfile: async () => {
-    const res = await axios.get(`${API_BASE}/users/profile`, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
-  updateProfile: async (data) => {
-    const res = await axios.put(`${API_BASE}/users/profile`, data, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
+  getProfile: () => api.get('/users/profile'),
+  updateProfile: (data) => api.put('/users/profile', data),
+  getAllStudents: () => api.get('/users/students'),
+  getStudentById: (id) => api.get(`/users/students/${id}`),
+  createStudent: (data) => api.post('/users/students', data),
+  updateStudent: (id, data) => api.put(`/users/students/${id}`, data),
+  deleteStudent: (id) => api.delete(`/users/students/${id}`),
+  uploadStudentsCSV: (formData) => api.post('/users/students/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
-export const studentAPI = {
-  getAll: async () => {
-    const res = await axios.get(`${API_BASE}/users/students`, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
-
-  getById: async (id) => {
-    const res = await axios.get(`${API_BASE}/users/students/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
-
-  create: async (data) => {
-    const res = await axios.post(`${API_BASE}/users/students`, data, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
-
-  update: async (id, data) => {
-    const res = await axios.put(`${API_BASE}/users/students/${id}`, data, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
-
-  delete: async (id) => {
-    const res = await axios.delete(`${API_BASE}/users/students/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    return res.data;
-  },
+export const courseAPI = {
+  uploadCSV: (formData) => api.post('/courses/upload-csv', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  getAll: () => api.get('/courses'),
+  getMyCourses: () => api.get('/courses/my-courses'),
 };
+
+export const requestAPI = {
+  create: (data) => api.post('/requests', data),
+  getAll: () => api.get('/requests'),
+  getMyRequests: () => api.get('/requests/my-requests'),
+  process: (id, status) => api.patch(`/requests/${id}`, { status }),
+};
+
+export default api;

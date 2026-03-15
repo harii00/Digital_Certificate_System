@@ -16,26 +16,57 @@ import {
   ShieldCheck,
   Award,
   Sparkles,
-  ChevronRight,
   Save,
   Eye,
   Calendar,
+  Upload,
+  CheckCircle,
+  AlertOctagon,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Badge } from '../../components/UI';
 import AdminHeader from '../../components/AdminHeader';
+import { userAPI } from '../../services/api';
+
+const DEPARTMENT_MAPPING = {
+  'BM': 'Biomedical Engineering',
+  'CE': 'Civil Engineering',
+  'CD': 'Computer Science & Design',
+  'CS': 'Computer Science & Engineering',
+  'EE': 'Electrical & Electronics Engineering',
+  'EC': 'Electronics & Communication Engineering',
+  'EI': 'Electronics & Instrumentation Engineering',
+  'ME': 'Mechanical Engineering',
+  'MZ': 'Mechatronics Engineering',
+  'SE': 'Information Science & Engineering',
+  'AG': 'Agricultural Engineering',
+  'AD': 'Artificial Intelligence and Data Science',
+  'AL': 'Artificial Intelligence and Machine Learning',
+  'BT': 'Biotechnology',
+  'CB': 'Computer Science & Business Systems',
+  'CT': 'Computer Technology',
+  'FT': 'Fashion Technology',
+  'FD': 'Food Technology',
+  'IT': 'Information Technology',
+  'TT': 'Textile Technology'
+};
 
 const StudentManagement = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', department: '' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', department: '', roll_number: '' });
   const [saving, setSaving] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResults, setUploadResults] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,7 +86,7 @@ const StudentManagement = () => {
 
   const openCreateModal = () => {
     setEditMode(false);
-    setFormData({ name: '', email: '', password: '', department: '' });
+    setFormData({ name: '', email: '', password: '', department: '', roll_number: '' });
     setShowModal(true);
   };
 
@@ -66,6 +97,7 @@ const StudentManagement = () => {
       email: student.email,
       password: '',
       department: student.department || '',
+      roll_number: student.roll_number || '',
     });
     setSelectedStudent(student);
     setShowModal(true);
@@ -81,8 +113,45 @@ const StudentManagement = () => {
     }
   };
 
+  const handleRollNumberChange = (value) => {
+    const roll_number = value.toUpperCase();
+    let newFormData = { ...formData, roll_number };
+
+    if (roll_number.length === 12) {
+      const deptCode = roll_number.substring(7, 9);
+      const department = DEPARTMENT_MAPPING[deptCode];
+      
+      if (department) {
+        newFormData.department = department;
+        newFormData.password = `${roll_number}@digicert`;
+      } else {
+        toast.error('Invalid department code in roll number');
+        newFormData.department = '';
+        newFormData.password = '';
+      }
+    } else {
+      newFormData.department = '';
+      newFormData.password = '';
+    }
+
+    setFormData(newFormData);
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
+
+    if (!editMode) {
+      if (formData.roll_number.length !== 12) {
+        toast.error('Roll number must be 12 characters');
+        return;
+      }
+      const deptCode = formData.roll_number.substring(7, 9);
+      if (!DEPARTMENT_MAPPING[deptCode]) {
+        toast.error('Invalid roll number or department code.');
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       if (editMode && selectedStudent) {
@@ -91,11 +160,6 @@ const StudentManagement = () => {
         await axios.put(`http://localhost:5000/api/users/students/${selectedStudent._id}`, updateData);
         toast.success('Student updated successfully');
       } else {
-        if (!formData.password) {
-          toast.error('Password is required for new students');
-          setSaving(false);
-          return;
-        }
         await axios.post('http://localhost:5000/api/users/students', formData);
         toast.success('Student created successfully');
       }
@@ -119,9 +183,61 @@ const StudentManagement = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploadFile(file);
+      setUploadResults(null);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFile) {
+      toast.error('Please select a file to upload');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', uploadFile);
+
+    setUploading(true);
+    setUploadResults(null);
+
+    try {
+      const { data } = await userAPI.uploadStudentsCSV(formData);
+      setUploadResults(data.results);
+      toast.success('File processed successfully!');
+      fetchStudents();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to upload file');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const resetUploadModal = () => {
+    setUploadFile(null);
+    setUploadResults(null);
+    setShowUploadModal(false);
+  };
+
+  const downloadTemplate = () => {
+    const content = 'name,roll_number,email\nHari Hara Sudhan N,7376232CB119,hariharasudhan.cb23@bitsathy.ac.in\nSneha T,7376232CB150,sneha.cb23@bitsathy.ac.in';
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'student_import_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
   const filteredStudents = students.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (s.roll_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (s.department || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -169,11 +285,18 @@ const StudentManagement = () => {
               />
             </div>
             <button
+              onClick={() => setShowUploadModal(true)}
+              className="btn-saas-secondary px-6 h-fit group"
+            >
+              <FileSpreadsheet className="w-5 h-5 mr-2 text-indigo-500" />
+              <span className="whitespace-nowrap">Upload Student List</span>
+            </button>
+            <button
               onClick={openCreateModal}
               className="btn-saas-primary px-8 h-fit shadow-2xl shadow-primary-500/10 group"
             >
               <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-500" />
-              <span>Add Student</span>
+              <span className="whitespace-nowrap">Add Student</span>
             </button>
           </div>
         </div>
@@ -217,6 +340,7 @@ const StudentManagement = () => {
               <thead>
                 <tr className="border-b border-slate-50">
                   <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">Student</th>
+                  <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">Roll Number</th>
                   <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">Email</th>
                   <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">Department</th>
                   <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">Certificates</th>
@@ -248,6 +372,9 @@ const StudentManagement = () => {
                     <tr key={student._id} className="hover:bg-slate-50/50 transition-colors group/row">
                       <td className="px-8 py-5">
                         <span className="font-bold text-slate-900 tracking-tight group-hover/row:text-indigo-600 transition-colors">{student.name}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-sm font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">{student.roll_number || '—'}</span>
                       </td>
                       <td className="px-8 py-5">
                         <span className="text-sm text-slate-500 font-medium">{student.email}</span>
@@ -301,18 +428,18 @@ const StudentManagement = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/30 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/70 backdrop-blur-sm"
             onClick={() => setShowModal(false)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-lg"
+              className="w-full max-w-md"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="surface-glass p-1 shadow-2xl">
-                <div className="bg-white rounded-[2.2rem] p-10 border border-slate-100">
+                <div className="bg-white/95 rounded-[2.2rem] p-8 border border-slate-100">
                   <div className="flex items-center justify-between mb-10">
                     <div className="flex items-center space-x-4">
                       <div className="p-3 bg-slate-900 text-white rounded-2xl">
@@ -339,10 +466,27 @@ const StudentManagement = () => {
                         <input
                           type="text"
                           placeholder="Student full name"
-                          className="input-saas pl-12"
+                          className="input-saas pl-12 placeholder:text-[11px]"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 group">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-4">Roll Number</label>
+                      <div className="relative">
+                        <Sparkles className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="e.g. 7376232CB119"
+                          className="input-saas pl-12 font-mono placeholder:text-[11px]"
+                          value={formData.roll_number}
+                          onChange={(e) => handleRollNumberChange(e.target.value)}
+                          maxLength={12}
+                          required
+                          disabled={editMode}
                         />
                       </div>
                     </div>
@@ -354,7 +498,7 @@ const StudentManagement = () => {
                         <input
                           type="email"
                           placeholder="student@example.com"
-                          className="input-saas pl-12"
+                          className="input-saas pl-12 placeholder:text-[11px]"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                           required
@@ -369,11 +513,11 @@ const StudentManagement = () => {
                       <div className="relative">
                         <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
-                          type="password"
-                          placeholder={editMode ? '••••••••' : 'Set password'}
-                          className="input-saas pl-12"
+                          type="text"
+                          placeholder={editMode ? '••••••••' : 'Auto-generated password'}
+                          className="input-saas pl-12 font-mono bg-slate-50 cursor-not-allowed placeholder:text-[11px]"
                           value={formData.password}
-                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          readOnly
                           required={!editMode}
                         />
                       </div>
@@ -385,10 +529,10 @@ const StudentManagement = () => {
                         <Building className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                           type="text"
-                          placeholder="e.g. Computer Science"
-                          className="input-saas pl-12"
+                          placeholder="Auto-filled from roll number"
+                          className="input-saas pl-12 bg-slate-50 cursor-not-allowed placeholder:text-[11px]"
                           value={formData.department}
-                          onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                          readOnly
                         />
                       </div>
                     </div>
@@ -482,6 +626,157 @@ const StudentManagement = () => {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Upload Modal */}
+      <AnimatePresence>
+        {showUploadModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/70 backdrop-blur-sm"
+            onClick={resetUploadModal}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="surface-glass p-1 shadow-2xl">
+                <div className="bg-white/95 rounded-[2.2rem] p-8 border border-slate-100">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 bg-slate-900 text-white rounded-2xl">
+                        <Upload className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-black tracking-tighter text-slate-900 uppercase">Bulk Upload</h2>
+                        <p className="text-sm text-slate-500">Import students via CSV or Excel mapping</p>
+                      </div>
+                    </div>
+                    <button onClick={resetUploadModal} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                      <X className="w-5 h-5 text-slate-400" />
+                    </button>
+                  </div>
+
+                  {!uploadResults ? (
+                    <div className="space-y-6">
+                      <div className="p-6 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-indigo-400 hover:bg-indigo-50/30 transition-all">
+                        <input
+                          type="file"
+                          accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                          onChange={handleFileChange}
+                          className="hidden"
+                          id="student-file-upload"
+                        />
+                        <label htmlFor="student-file-upload" className="cursor-pointer flex flex-col items-center">
+                          <FileSpreadsheet className="w-10 h-10 text-slate-300 mb-3" />
+                          <span className="text-slate-700 font-bold mb-1">
+                            {uploadFile ? uploadFile.name : 'Click to select CSV or Excel file'}
+                          </span>
+                          <span className="text-xs text-slate-400 font-medium tracking-wide">
+                            {uploadFile ? `${(uploadFile.size / 1024).toFixed(1)} KB` : 'Required columns: name, roll_number, email'}
+                          </span>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <button
+                          onClick={downloadTemplate}
+                          className="text-[11px] font-black uppercase tracking-widest text-indigo-500 hover:text-indigo-700 transition-colors"
+                        >
+                          ↓ Download Template
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={handleUpload}
+                        disabled={!uploadFile || uploading}
+                        className="w-full btn-saas-primary py-5 relative"
+                      >
+                        {uploading ? (
+                          <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto"></div>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            <span className="text-sm font-bold uppercase tracking-widest">Process File</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-4">
+                         <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex items-center space-x-4">
+                           <div className="p-2 bg-indigo-100/50 rounded-xl text-indigo-600">
+                             <Users className="w-5 h-5" />
+                           </div>
+                           <div>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Processed</p>
+                             <p className="text-xl font-black text-slate-900">{uploadResults.totalProcessed}</p>
+                           </div>
+                         </div>
+                         <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center space-x-4">
+                           <div className="p-2 bg-emerald-100/50 rounded-xl text-emerald-600">
+                             <CheckCircle className="w-5 h-5" />
+                           </div>
+                           <div>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Successfully Added</p>
+                             <p className="text-xl font-black text-emerald-700">{uploadResults.added}</p>
+                           </div>
+                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-5 bg-amber-50 rounded-2xl border border-amber-100 flex items-center space-x-4">
+                           <div className="p-2 bg-amber-100/50 rounded-xl text-amber-600">
+                             <Upload className="w-5 h-5 rotate-90" />
+                           </div>
+                           <div>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Skipped (Dupes)</p>
+                             <p className="text-xl font-black text-amber-700">{uploadResults.skipped}</p>
+                           </div>
+                         </div>
+                         <div className="p-5 bg-rose-50 rounded-2xl border border-rose-100 flex items-center space-x-4">
+                           <div className="p-2 bg-rose-100/50 rounded-xl text-rose-600">
+                             <AlertOctagon className="w-5 h-5" />
+                           </div>
+                           <div>
+                             <p className="text-[10px] font-black uppercase tracking-widest text-rose-600">Invalid Rows</p>
+                             <p className="text-xl font-black text-rose-700">{uploadResults.invalid}</p>
+                           </div>
+                         </div>
+                      </div>
+
+                      {uploadResults.errors && uploadResults.errors.length > 0 && (
+                        <div className="mt-4 p-4 bg-rose-50 border border-rose-100 rounded-xl max-h-40 overflow-y-auto">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-rose-600 mb-2">Error Log</p>
+                          <ul className="space-y-1">
+                            {uploadResults.errors.map((err, i) => (
+                              <li key={i} className="text-sm font-medium text-rose-700 flex items-start">
+                                <span className="mr-2">•</span> {err}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={resetUploadModal}
+                        className="w-full btn-saas-secondary py-5 bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      >
+                        <span className="text-sm font-bold uppercase tracking-widest">Close Summary</span>
+                      </button>
                     </div>
                   )}
                 </div>
