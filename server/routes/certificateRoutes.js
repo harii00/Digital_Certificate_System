@@ -8,6 +8,7 @@ import {
   updateCertificateStatus,
   deleteCertificate,
   downloadPDF,
+  publicDownloadPDF,
   getRanking,
 } from '../controllers/certificateController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
@@ -17,6 +18,7 @@ const router = express.Router();
 // Public routes
 router.get('/verify/:certId', getCertificateByCertId);
 router.get('/ranking', getRanking);
+router.get('/public/:certificateId/download', publicDownloadPDF);
 router.get('/:id/download', downloadPDF);
 
 // Protected routes

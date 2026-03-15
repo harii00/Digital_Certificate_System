@@ -13,13 +13,29 @@ import {
     MousePointer2,
     ChevronDown,
     Award,
-    RefreshCw
+    RefreshCw,
+    Search,
+    CheckCircle,
+    ExternalLink,
 } from 'lucide-react';
 import CertificateCard from '../components/CertificateCard';
 
 const LandingPage = () => {
     const navigate = useNavigate();
     const [hoveredCard, setHoveredCard] = useState(null);
+    const [verifyId, setVerifyId] = useState('');
+    const [verifyError, setVerifyError] = useState('');
+
+    const handlePublicVerify = (e) => {
+        e.preventDefault();
+        const trimmed = verifyId.trim();
+        if (!trimmed) {
+            setVerifyError('Please enter a Certificate ID.');
+            return;
+        }
+        setVerifyError('');
+        navigate(`/verify-certificate?id=${encodeURIComponent(trimmed)}`);
+    };
 
     const features = [
         {
@@ -282,6 +298,87 @@ const LandingPage = () => {
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            {/* ─── Public Certificate Verification Section ─── */}
+            <section className="py-24 px-6">
+                <div className="max-w-[960px] mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                        className="surface-glass p-1 shadow-2xl"
+                    >
+                        <div className="bg-white rounded-[2.5rem] p-10 md:p-16 border border-slate-100">
+                            {/* Header */}
+                            <div className="text-center mb-12">
+                                <div className="inline-flex items-center space-x-2 px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-full mb-6">
+                                    <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">Public Verification</span>
+                                </div>
+                                <h2 className="text-4xl md:text-5xl font-black tracking-[-0.04em] text-slate-900 mb-4 leading-tight">
+                                    Verify a Certificate
+                                </h2>
+                                <p className="text-slate-500 font-bold text-lg max-w-md mx-auto leading-relaxed">
+                                    Enter the certificate ID to validate an issued certificate instantly.
+                                </p>
+                            </div>
+
+                            {/* Form */}
+                            <form onSubmit={handlePublicVerify} className="space-y-5 max-w-xl mx-auto">
+                                <div className="space-y-2 group">
+                                    <div className="relative">
+                                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                        <input
+                                            id="landing-verify-input"
+                                            type="text"
+                                            placeholder="Enter Certificate ID"
+                                            value={verifyId}
+                                            onChange={(e) => { setVerifyId(e.target.value); setVerifyError(''); }}
+                                            className="input-saas pl-14"
+                                        />
+                                    </div>
+                                    {verifyError && (
+                                        <p className="text-xs font-bold text-rose-500 ml-2">{verifyError}</p>
+                                    )}
+                                </div>
+                                <button
+                                    id="landing-verify-btn"
+                                    type="submit"
+                                    className="w-full btn-saas-primary group py-5"
+                                >
+                                    <ShieldCheck className="w-4 h-4" />
+                                    <span className="text-sm font-bold uppercase tracking-widest">Verify Certificate</span>
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform ml-auto" />
+                                </button>
+                            </form>
+
+                            {/* Trust Footer row */}
+                            <div className="mt-12 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-center gap-6 text-slate-400">
+                                <div className="flex items-center space-x-2">
+                                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                                    <span className="text-[12px] font-bold uppercase tracking-widest">No login required</span>
+                                </div>
+                                <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-200"></div>
+                                <div className="flex items-center space-x-2">
+                                    <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                                    <span className="text-[12px] font-bold uppercase tracking-widest">Instant validation</span>
+                                </div>
+                                <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-200"></div>
+                                <div className="flex items-center space-x-2">
+                                    <ExternalLink className="w-4 h-4 text-slate-400" />
+                                    <Link
+                                        to="/verify-certificate"
+                                        className="text-[12px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 transition-colors underline underline-offset-4"
+                                    >
+                                        Open Verify Page
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
             </section>
 

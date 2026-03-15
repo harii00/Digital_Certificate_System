@@ -327,6 +327,115 @@ export const downloadPDF = async (req, res) => {
   }
 };
 
+// @desc    Public download of certificate PDF by certificateId string (no auth required)
+// @route   GET /api/certificates/public/:certificateId/download
+// @access  Public
+export const publicDownloadPDF = async (req, res) => {
+  try {
+    const certificate = await Certificate.findOne({ certificateId: req.params.certificateId })
+      .populate('issuedBy');
+
+    if (!certificate) {
+      return res.status(404).json({ message: 'Certificate not found' });
+    }
+
+    const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 0 });
+    res.setHeader('Content-Type', 'application/pdf');
+
+    if (req.query.inline === 'true') {
+      res.setHeader('Content-Disposition', `inline; filename=${certificate.certificateId}.pdf`);
+    } else {
+      res.setHeader('Content-Disposition', `attachment; filename=${certificate.certificateId}.pdf`);
+    }
+
+    doc.pipe(res);
+
+    // Background
+    doc.rect(0, 0, doc.page.width, doc.page.height).fill('#ffffff');
+
+    // Borders
+    doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40)
+      .lineWidth(8)
+      .stroke('#0f172a');
+
+    doc.rect(34, 34, doc.page.width - 68, doc.page.height - 68)
+      .lineWidth(1.5)
+      .stroke('#64748b');
+
+    // Logo
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const logoPath = path.resolve('public', 'bannari_new_logo.png');
+      if (fs.existsSync(logoPath)) {
+        doc.image(logoPath, (doc.page.width - 550) / 2, 60, { width: 550 });
+      }
+    } catch(err) {
+      console.error('Logo not found or could not be loaded:', err);
+    }
+
+    doc.fillColor('#475569');
+
+    doc.fontSize(18)
+      .font('Helvetica')
+      .text('This acknowledges that', 0, 260, { width: doc.page.width, align: 'center' });
+
+    doc.moveDown(0.3);
+
+    let nameFontSize = 42;
+    doc.font('Helvetica-Bold');
+    while (doc.widthOfString(certificate.studentName, { size: nameFontSize }) > doc.page.width - 120) {
+      nameFontSize -= 2;
+    }
+
+    doc.fontSize(nameFontSize)
+      .fillColor('#0f172a')
+      .text(certificate.studentName, 0, doc.y, { width: doc.page.width, align: 'center', lineBreak: false });
+
+    doc.moveDown(0.3);
+
+    doc.fillColor('#475569')
+      .fontSize(18)
+      .font('Helvetica')
+      .text('has successfully completed and is certified in', 0, doc.y, { width: doc.page.width, align: 'center' });
+
+    doc.moveDown(0.3);
+
+    doc.fontSize(28)
+      .font('Times-BoldItalic')
+      .fillColor('#1e40af')
+      .text(`${certificate.event}`, 0, doc.y, { width: doc.page.width, align: 'center' });
+
+    const bottomY = 460;
+
+    const formattedDate = new Date(certificate.issuedDate).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+    doc.fontSize(16)
+      .font('Helvetica-Bold')
+      .fillColor('#475569')
+      .text(`Issue Date: ${formattedDate}`, 60, bottomY)
+      .text(`Certificate ID: ${certificate.certificateId}`, 60, bottomY + 25);
+
+    if (certificate.issuedBy && certificate.issuedBy.signature) {
+      try {
+        const sigImage = certificate.issuedBy.signature.split(',')[1];
+        if (sigImage) {
+          const sigBuffer = Buffer.from(sigImage, 'base64');
+          doc.image(sigBuffer, doc.page.width - 320, bottomY - 60, { width: 260, height: 120, fit: [260, 120], align: 'right' });
+        }
+      } catch(err) {
+        console.error('Error rendering signature:', err);
+        doc.fontSize(16).font('Helvetica-Oblique').fillColor('#0f172a').text('Authorized Signatory', doc.page.width - 250, bottomY + 10);
+      }
+    } else {
+      doc.fontSize(14).font('Helvetica-Oblique').fillColor('#0f172a').text('Authorized Signatory', doc.page.width - 250, bottomY + 10);
+    }
+
+    doc.end();
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Get top 100 students by certificate count
 // @route   GET /api/certificates/ranking
 // @access  Public

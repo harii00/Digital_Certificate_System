@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import {
   Search,
@@ -20,35 +21,54 @@ import { Link } from 'react-router-dom';
 import { Badge } from '../components/UI';
 
 const VerifyCertificate = () => {
-  const [certId, setCertId] = useState('');
+  const [searchParams] = useSearchParams();
+  const [certId, setCertId] = useState(searchParams.get('id') || '');
   const [certificate, setCertificate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
+  const [validationMsg, setValidationMsg] = useState('');
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    if (!certId.trim()) return;
-
+  const verify = async (id) => {
+    const trimmed = (id || certId).trim();
+    if (!trimmed) {
+      setValidationMsg('Certificate ID is required.');
+      return;
+    }
+    setValidationMsg('');
     setLoading(true);
     setError('');
     setCertificate(null);
     setSearched(true);
 
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/certificates/verify/${certId.trim()}`);
+      const { data } = await axios.get(`http://localhost:5000/api/certificates/verify/${trimmed}`);
       setCertificate(data);
     } catch (err) {
-      setError(err.response?.data?.message || 'Certificate not found. Please check the Certificate ID and try again.');
+      setError('No certificate found for this Certificate ID. Please check the ID and try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleVerify = (e) => {
+    e.preventDefault();
+    verify();
+  };
+
+  // Auto-verify if ID came from URL query param
+  useEffect(() => {
+    const idFromUrl = searchParams.get('id');
+    if (idFromUrl) {
+      verify(idFromUrl);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleDownload = () => {
     if (!certificate) return;
     const link = document.createElement('a');
-    link.href = `http://localhost:5000/api/certificates/${certificate._id}/download`;
+    link.href = `http://localhost:5000/api/certificates/public/${certificate.certificateId}/download`;
     link.download = `${certificate.certificateId}.pdf`;
     document.body.appendChild(link);
     link.click();
@@ -68,11 +88,11 @@ const VerifyCertificate = () => {
           animate={{ opacity: 1, x: 0 }}
         >
           <Link
-            to="/login"
+            to="/"
             className="group mb-16 inline-flex items-center space-x-3 px-6 py-3 bg-white hover:bg-slate-50 rounded-2xl border border-slate-100 shadow-sm transition-all"
           >
             <ArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900 transition-colors" />
-            <span className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-800 group-hover:text-slate-900">Return to Portal</span>
+            <span className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-800 group-hover:text-slate-900">Back to Home</span>
           </Link>
         </motion.div>
 
@@ -112,10 +132,12 @@ const VerifyCertificate = () => {
                       placeholder="e.g. DCS-A1B2C3D4E5"
                       className="input-saas pl-14"
                       value={certId}
-                      onChange={(e) => setCertId(e.target.value)}
-                      required
+                      onChange={(e) => { setCertId(e.target.value); setValidationMsg(''); }}
                     />
                   </div>
+                  {validationMsg && (
+                    <p className="text-xs font-bold text-rose-500 ml-4">{validationMsg}</p>
+                  )}
                 </div>
 
                 <button
